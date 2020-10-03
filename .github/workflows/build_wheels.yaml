@@ -24,7 +24,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
-      run: bash ./install_dependencies.sh
+      run: bash .github/workflows/install_dependencies.sh
       shell: bash
     - name: Maturin build
       run: |
