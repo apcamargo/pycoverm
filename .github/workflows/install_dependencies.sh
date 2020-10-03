@@ -8,6 +8,3 @@ case "$(uname -s)" in
     ;;
     *)
 esac
-
-# Install Rust
-curl https://sh.rustup.rs -sSf | sh -s -- -y --profile=minimal
