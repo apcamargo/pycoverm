@@ -1,0 +1,18 @@
+[package]
+name = "pycoverm"
+version = "0.1.0"
+authors = ["Antonio Camargo <antoniop.camargo@gmail.com>"]
+edition = "2018"
+readme = "README.md"
+homepage = "https://github.com/apcamargo/pycoverm"
+keywords = ["bioinformatics"]
+
+[lib]
+name = "pycoverm"
+crate-type = ["cdylib"]
+
+[dependencies]
+coverm = "0.3.2"
+ndarray = "0.13.1"
+numpy = "0.11.0"
+pyo3 = { version = "0.12.1", features = ["extension-module"] }
