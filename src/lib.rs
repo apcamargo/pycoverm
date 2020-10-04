@@ -187,7 +187,7 @@ fn get_coverages_from_bam(
 }
 
 #[pymodule]
-fn _coverage(_py: Python, m: &PyModule) -> PyResult<()> {
+fn pycoverm(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(get_coverages_from_bam))?;
     Ok(())
 }
