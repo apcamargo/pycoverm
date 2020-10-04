@@ -29,7 +29,7 @@ jobs:
     - name: Maturin build
       run: |
         pip install maturin
-        maturin build --release --interpreter python
+        maturin build --release --interpreter python --manylinux 2010-unchecked
     - name: Install pyCoverM
       run: pip install target/wheels/*.whl
       shell: bash
