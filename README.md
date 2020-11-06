@@ -1,6 +1,6 @@
 # pyCoverM
 
-This package is still in experimental stages and aims to be a simple Python interface to CoverM's fast coverage estimation functions. Currently, pyCoverM provides a single function, `get_coverages_from_bam`, that computes average contig coverages from sorted BAM files.
+This package is still in experimental stages and aims to be a simple Python interface to [CoverM](https://github.com/wwood/CoverM)'s fast coverage estimation functions. Currently, pyCoverM provides a single function, `get_coverages_from_bam`, that computes average contig coverages from sorted BAM files.
 
 ```rust
 /// get_coverages_from_bam(bam_list, contig_end_exclusion=75, min_identity=0.97, threads=1)
