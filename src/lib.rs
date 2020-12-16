@@ -20,9 +20,9 @@ struct FilterParameters {
     min_aligned_percent_pair: f32,
 }
 
-struct EstimatorsAndTaker<'a> {
+struct EstimatorsAndTaker {
     estimators: Vec<CoverageEstimator>,
-    taker: CoverageTakerType<'a>,
+    taker: CoverageTakerType,
 }
 
 /// get_coverages_from_bam(bam_list, contig_end_exclusion=75, min_identity=0.97, threads=1)
@@ -70,7 +70,7 @@ struct EstimatorsAndTaker<'a> {
 fn get_coverages_from_bam(
     py: Python,
     bam_list: Vec<&str>,
-    contig_end_exclusion: u32,
+    contig_end_exclusion: u64,
     min_identity: f32,
     trim_lower: f32,
     trim_upper: f32,
