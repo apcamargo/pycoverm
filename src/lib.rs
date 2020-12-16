@@ -1,14 +1,13 @@
 use coverm::{
-    bam_generator::*,
-    contig::*,
-    coverage_takers::*,
-    mosdepth_genome_coverage_estimators::*,
+    bam_generator::*, contig::*, coverage_takers::*, mosdepth_genome_coverage_estimators::*,
     FlagFilter,
 };
 use ndarray::Array2;
 use numpy::convert::ToPyArray;
 use pyo3::{prelude::*, wrap_pyfunction};
+use rust_htslib::{bam, bam::Read};
 use std::collections::{HashMap, HashSet};
+use std::str;
 
 struct FilterParameters {
     flag_filters: FlagFilter,
@@ -25,6 +24,34 @@ struct EstimatorsAndTaker {
     taker: CoverageTakerType,
 }
 
+/// is_bam_sorted(bam_file)
+/// --
+///
+/// Checks whether a BAM file is sorted by coordinate.
+///
+/// Parameters
+/// ----------
+/// bam_file : list
+///     Path to a BAM file.
+///
+/// Returns
+/// -------
+/// bool
+///     Returns `True` if the BAM file is sorted by coordinate and `False`
+///     otherwise.
+#[pyfunction]
+fn is_bam_sorted(bam_file: &str) -> PyResult<bool> {
+    let bam = bam::Reader::from_path(bam_file).unwrap();
+    // Read the first 64 bytes of the BAM header
+    let header = &bam::Header::from_template(bam.header()).to_bytes()[0..64];
+    let header = str::from_utf8(header).unwrap();
+    if header.contains("SO:coordinate") {
+        Ok(true)
+    } else {
+        Ok(false)
+    }
+}
+
 /// get_coverages_from_bam(bam_list, contig_end_exclusion=75, min_identity=0.97, threads=1)
 /// --
 ///
@@ -34,31 +61,31 @@ struct EstimatorsAndTaker {
 /// Parameters
 /// ----------
 /// bam_list : list
-///    Paths to input BAM files.
+///     Paths to input BAM files.
 /// contig_end_exclusion : int, optional
-///    Exclude bases at the ends of reference sequences from calculation.
-///    Default is 75.
+///     Exclude bases at the ends of reference sequences from calculation.
+///     Default is 75.
 /// min_identity : float, optional
-///    Exclude reads by overall identity to the reference sequences.
-///    Default is 0.97.
+///     Exclude reads by overall identity to the reference sequences.
+///     Default is 0.97.
 /// trim_lower : float, optional
-///    Fraction to trim from the lower tail of the coverage distribution.
-///    Default is 0.0.
+///     Fraction to trim from the lower tail of the coverage distribution.
+///     Default is 0.0.
 /// trim_upper : float, optional
-///    Fraction to trim from the upper tail of the coverage distribution.
-///    Default is 0.0.
+///     Fraction to trim from the upper tail of the coverage distribution.
+///     Default is 0.0.
 /// contig_set : set, optional
-///    If provided, only the coverages of the contigs within `contig_set` will
-///    returned.
-///    Default is None (return the coverages of all contigs).
+///     If provided, only the coverages of the contigs within `contig_set` will
+///     returned.
+///     Default is None (return the coverages of all contigs).
 /// threads : int, optional
-///    Number of threads to use for coverage computation. Default is 1.
+///     Number of threads to use for coverage computation. Default is 1.
 ///
 /// Returns
 /// -------
 /// tuple
-///    A tuple whose fist element is a list of the contig names and the second
-///    one is a numpy matrix of contig coverages in the input BAM files.
+///     A tuple whose fist element is a list of the contig names and the second
+///     one is a numpy matrix of contig coverages in the input BAM files.
 #[pyfunction(
     contig_end_exclusion = "75",
     min_identity = "0.97",
@@ -188,6 +215,7 @@ fn get_coverages_from_bam(
 
 #[pymodule]
 fn pycoverm(_py: Python, m: &PyModule) -> PyResult<()> {
+    m.add_wrapped(wrap_pyfunction!(is_bam_sorted))?;
     m.add_wrapped(wrap_pyfunction!(get_coverages_from_bam))?;
     Ok(())
 }

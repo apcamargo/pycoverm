@@ -16,6 +16,7 @@ coverm = "0.6.0"
 ndarray = "0.14.0"
 numpy = "0.12.1"
 pyo3 = { version = "0.12.4", features = ["extension-module"] }
+rust-htslib = "0.35.2"
 
 [package.metadata.maturin]
 requires-dist = ["numpy"]
