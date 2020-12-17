@@ -13,7 +13,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 coverm = "0.6.0"
-galah = { git = 'https://github.com/wwood/galah' }
 ndarray = "0.14.0"
 numpy = "0.12.1"
 pyo3 = { version = "0.12.4", features = ["extension-module"] }
