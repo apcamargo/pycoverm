@@ -29,7 +29,8 @@ pip install pycoverm
 ```
 
 ```rust
-/// get_coverages_from_bam(bam_list, contig_end_exclusion=75, min_identity=0.97, threads=1)
+/// get_coverages_from_bam(bam_list, contig_end_exclusion=75, min_identity=0.97,
+/// trim_lower=0.0, trim_upper=0.0, contig_list=None, threads=1)
 /// --
 ///
 /// Computes contig mean coverages from sorted BAM files. Trimmed means will be

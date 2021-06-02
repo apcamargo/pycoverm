@@ -1,6 +1,6 @@
 [package]
 name = "pycoverm"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Antonio Camargo <antoniop.camargo@gmail.com>"]
 edition = "2018"
 readme = "README.md"
@@ -13,10 +13,11 @@ crate-type = ["cdylib"]
 
 [dependencies]
 coverm = "0.6.0"
+indexmap = "1.6.2"
 ndarray = "0.13.1"
 numpy = "0.12.1"
 pyo3 = { version = "0.12.4", features = ["extension-module"] }
-rust-htslib = "0.35.2"
+rust-htslib = "0.36.0"
 
 [package.metadata.maturin]
 requires-dist = ["numpy"]

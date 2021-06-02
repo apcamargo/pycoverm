@@ -2,11 +2,12 @@ use coverm::{
     bam_generator::*, contig::*, coverage_takers::*, mosdepth_genome_coverage_estimators::*,
     FlagFilter,
 };
+use indexmap::IndexMap;
 use ndarray::Array2;
 use numpy::convert::ToPyArray;
 use pyo3::{prelude::*, wrap_pyfunction};
 use rust_htslib::{bam, bam::Read};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::str;
 
 struct FilterParameters {
@@ -52,7 +53,8 @@ fn is_bam_sorted(bam_file: &str) -> PyResult<bool> {
     }
 }
 
-/// get_coverages_from_bam(bam_list, contig_end_exclusion=75, min_identity=0.97, threads=1)
+/// get_coverages_from_bam(bam_list, contig_end_exclusion=75, min_identity=0.97,
+/// trim_lower=0.0, trim_upper=0.0, contig_list=None, threads=1)
 /// --
 ///
 /// Computes contig mean coverages from sorted BAM files. Trimmed means will be
@@ -149,7 +151,7 @@ fn get_coverages_from_bam(
         threads,
     );
 
-    let mut contig_coverages = HashMap::new();
+    let mut contig_coverages = IndexMap::new();
     match &estimators_and_taker.taker {
         CoverageTakerType::CachedSingleFloatCoverageTaker {
             stoit_names: _,
