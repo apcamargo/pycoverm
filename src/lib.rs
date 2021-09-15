@@ -32,7 +32,7 @@ struct EstimatorsAndTaker {
 ///
 /// Parameters
 /// ----------
-/// bam_file : list
+/// bam_file : str
 ///     Path to a BAM file.
 ///
 /// Returns
