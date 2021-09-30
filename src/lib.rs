@@ -43,14 +43,8 @@ struct EstimatorsAndTaker {
 #[pyfunction]
 fn is_bam_sorted(bam_file: &str) -> PyResult<bool> {
     let bam = bam::Reader::from_path(bam_file).unwrap();
-    // Read the first 64 bytes of the BAM header
-    let header = &bam::Header::from_template(bam.header()).to_bytes()[0..64];
-    let header = str::from_utf8(header).unwrap();
-    if header.contains("SO:coordinate") {
-        Ok(true)
-    } else {
-        Ok(false)
-    }
+    let bytes = &bam::Header::from_template(bam.header()).to_bytes();
+    Ok(bytes.windows(13).any(|window| {window == b"SO:coordinate"}))
 }
 
 /// get_coverages_from_bam(bam_list, contig_end_exclusion=75, min_identity=0.97,
