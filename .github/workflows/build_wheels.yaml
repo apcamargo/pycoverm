@@ -8,10 +8,10 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: [ '3.6', '3.7', '3.8', '3.9' ]
+        python-version: [ '3.6', '3.7', '3.8', '3.9', '3.10' ]
     steps:
     - name: Checkout
-      uses: actions/checkout@v2.3.3
+      uses: actions/checkout@v3
     - name: rust-toolchain
       uses: actions-rs/toolchain@v1.0.6
       with:
@@ -19,7 +19,7 @@ jobs:
         toolchain: stable
         default: true
     - name: Setup Python ${{ matrix.python-version }} environment
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Build wheels (x86_64)
@@ -43,10 +43,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ '3.6', '3.7', '3.8', '3.9' ]
+        python-version: [ '3.6', '3.7', '3.8', '3.9', '3.10' ]
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
         architecture: x64
