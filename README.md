@@ -33,8 +33,10 @@ pip install pycoverm
 /// trim_lower=0.0, trim_upper=0.0, contig_list=None, threads=1)
 /// --
 ///
-/// Computes contig mean coverages from sorted BAM files. Trimmed means will be
-/// computed if `trim_min` and/or `trim_max` are set to values greater than 0.
+/// Computes contig mean coverages from sorted BAM files. All BAM files must be
+/// mapped to the same reference.
+/// Trimmed means will be computed if `trim_min` and/or `trim_max` are set to
+/// values greater than 0.
 ///
 /// Parameters
 /// ----------
