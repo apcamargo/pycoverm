@@ -2,7 +2,7 @@
 name = "pycoverm"
 version = "0.4.0"
 authors = ["Antonio Camargo <antoniop.camargo@gmail.com>"]
-edition = "2018"
+edition = "2021"
 readme = "README.md"
 homepage = "https://github.com/apcamargo/pycoverm"
 keywords = ["bioinformatics"]
@@ -13,7 +13,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 coverm = "0.6.0"
-indexmap = "1.6.2"
 ndarray = "0.13.1"
 numpy = "0.12.1"
 pyo3 = { version = "0.12.4", features = ["extension-module"] }

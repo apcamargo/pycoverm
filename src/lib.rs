@@ -2,8 +2,7 @@ use coverm::{
     bam_generator::*, contig::*, coverage_takers::*, mosdepth_genome_coverage_estimators::*,
     FlagFilter,
 };
-use indexmap::IndexMap;
-use ndarray::Array2;
+use ndarray::Array;
 use numpy::convert::ToPyArray;
 use pyo3::{prelude::*, wrap_pyfunction};
 use rust_htslib::{bam, bam::Read};
@@ -44,15 +43,17 @@ struct EstimatorsAndTaker {
 fn is_bam_sorted(bam_file: &str) -> PyResult<bool> {
     let bam = bam::Reader::from_path(bam_file).unwrap();
     let bytes = &bam::Header::from_template(bam.header()).to_bytes();
-    Ok(bytes.windows(13).any(|window| {window == b"SO:coordinate"}))
+    Ok(bytes.windows(13).any(|window| window == b"SO:coordinate"))
 }
 
 /// get_coverages_from_bam(bam_list, contig_end_exclusion=75, min_identity=0.97,
 /// trim_lower=0.0, trim_upper=0.0, contig_list=None, threads=1)
 /// --
 ///
-/// Computes contig mean coverages from sorted BAM files. Trimmed means will be
-/// computed if `trim_min` and/or `trim_max` are set to values greater than 0.
+/// Computes contig mean coverages from sorted BAM files. All BAM files must be
+/// mapped to the same reference.
+/// Trimmed means will be computed if `trim_min` and/or `trim_max` are set to
+/// values greater than 0.
 ///
 /// Parameters
 /// ----------
@@ -122,12 +123,9 @@ fn get_coverages_from_bam(
         contig_end_exclusion,
     )];
     let taker = CoverageTakerType::new_cached_single_float_coverage_taker(estimators.len());
-    let mut estimators_and_taker = EstimatorsAndTaker {
-        estimators: estimators,
-        taker: taker,
-    };
+    let mut estimators_and_taker = EstimatorsAndTaker { estimators, taker };
     let bam_readers = generate_filtered_bam_readers_from_bam_files(
-        bam_list,
+        bam_list.clone(),
         filter_params.flag_filters.clone(),
         filter_params.min_aligned_length_single,
         filter_params.min_percent_identity_single,
@@ -136,6 +134,33 @@ fn get_coverages_from_bam(
         filter_params.min_percent_identity_pair,
         filter_params.min_aligned_percent_pair,
     );
+
+    // Get the headers from the first file, and verify all files have the same header.
+    let mut headers: Vec<String> = match verify_same_bam_headers(&bam_list, &bam_readers) {
+        // If no files: Return early with empty list
+        None => {
+            assert!(bam_list.is_empty());
+            return default_return_value(py, 0);
+        }
+        // Else: Copy the headers, since they must be moved into `contig_coverage` below.
+        Some((_, headers)) => headers
+            .iter()
+            .map(|&v| String::from_utf8_lossy(v).into_owned())
+            .collect(),
+    };
+
+    // The map lets us filter out contigs not in the contig map.
+    let map = contig_set.map(|names| index_map(&headers, &names));
+    if let Some(ref map) = map {
+        // If the empty set is passed, return early with empty list
+        if map.is_empty() {
+            return default_return_value(py, bam_list.len());
+        }
+        let mut itr = map.iter();
+        headers.retain(|_| *itr.next().unwrap() != u32::MAX)
+    }
+
+    // Compute coverage
     contig_coverage(
         bam_readers,
         &mut estimators_and_taker.taker,
@@ -145,68 +170,93 @@ fn get_coverages_from_bam(
         threads,
     );
 
-    let mut contig_coverages = IndexMap::new();
+    // Fill in matrix
+    let mut matrix = Array::zeros((headers.len(), bam_list.len()));
     match &estimators_and_taker.taker {
         CoverageTakerType::CachedSingleFloatCoverageTaker {
             stoit_names: _,
-            entry_names,
+            entry_names: _,
             coverages,
             current_stoit_index: _,
             current_entry_index: _,
             num_coverages: _,
         } => {
-            for input_bam in coverages {
+            for (col, input_bam) in coverages.iter().enumerate() {
                 for coverage_entry in input_bam {
-                    if let Some(contig_name) = &entry_names[coverage_entry.entry_index] {
-                        let contig_coverage_vector =
-                            contig_coverages.entry(contig_name).or_insert(vec![]);
-                        contig_coverage_vector.push(coverage_entry.coverage);
+                    let mut row = coverage_entry.entry_index;
+                    if let Some(ref map) = map {
+                        let i = map[coverage_entry.entry_index];
+                        if i == u32::MAX {
+                            continue;
+                        } else {
+                            row = i as usize
+                        }
                     }
+                    matrix[[row, col]] = coverage_entry.coverage
                 }
             }
         }
         _ => unreachable!(),
     }
+    (
+        matrix
+            .to_pyarray(Python::acquire_gil().python())
+            .into_py(py),
+        headers.into_py(py),
+    )
+}
 
-    // If `contig_set` is `None`, the coverage of every contig found within the input BAM files
-    // will be stored. If `contig_set` is a set containing contig names, only the coverages of those
-    // contigs will be stored.
+fn default_return_value(py: Python, n_files: usize) -> (Py<PyAny>, Py<PyAny>) {
+    (
+        Array::from_elem((0, n_files), 0f32)
+            .to_pyarray(Python::acquire_gil().python())
+            .into_py(py),
+        Vec::<String>::new().into_py(py),
+    )
+}
 
-    let (filter_contigs, contig_set) = match contig_set {
-        Some(_) => (true, contig_set.unwrap()),
-        None => (false, HashSet::new()),
-    };
-
-    let mut coverage_vector: std::vec::Vec<f32> = Vec::new();
-    let mut contig_names_vector = Vec::new();
-
-    if filter_contigs {
-        for (contig_name, contig_coverage_vector) in contig_coverages.iter() {
-            if contig_set.contains(contig_name.as_str()) {
-                coverage_vector.extend(contig_coverage_vector);
-                contig_names_vector.push(*contig_name);
-            }
-        }
-    } else {
-        for (contig_name, contig_coverage_vector) in contig_coverages.iter() {
-            coverage_vector.extend(contig_coverage_vector);
-            contig_names_vector.push(*contig_name);
+/// Map from index of original reference to index in new reference, only
+/// keeping those headers that are in names.
+/// Headers not in names will map to u32::MAX.
+/// Hence, header ["a", "b", "c"] and names ["c", "a"] will give
+/// [0, u32::MAX, 1]
+fn index_map(headers: &[String], names: &HashSet<&str>) -> Vec<u32> {
+    // Make sure there are no names in names which are not in headers.
+    let mut n_seen: usize = 0;
+    let mut result = vec![u32::MAX; headers.len()];
+    let mut new_index: u32 = 0;
+    for (i, header) in headers.iter().enumerate() {
+        if names.contains(&header.as_str()) {
+            result[i] = new_index;
+            new_index += 1;
+            n_seen += 1
         }
     }
+    if n_seen != names.len() {
+        panic!("Some names in `contig_set` were not found in BAM headers")
+    }
+    result
+}
 
-    let coverage_vector = Array2::from_shape_vec(
-        (
-            contig_names_vector.len(),
-            coverage_vector.len() / contig_names_vector.len(),
-        ),
-        coverage_vector,
-    )
-    .unwrap()
-    .to_pyarray(Python::acquire_gil().python())
-    .into_py(py);
-    let contig_names_vector = contig_names_vector.into_py(py);
-
-    (contig_names_vector, coverage_vector)
+fn verify_same_bam_headers<'a, 'b>(
+    bam_paths: &[&'a str],
+    readers: &'b [FilteredBamReader],
+) -> Option<(&'a str, Vec<&'b [u8]>)> {
+    bam_paths
+        .iter()
+        .zip(readers.iter())
+        .fold(None, |state, (filename, reader)| {
+            let new_names = reader.header().target_names();
+            if let Some((old_filename, old_names)) = state {
+                if old_names != new_names {
+                    panic!(
+                        "Headers of BAM file {} does not match those of BAM file {}.",
+                        old_filename, filename
+                    )
+                }
+            }
+            Some((*filename, new_names))
+        })
 }
 
 #[pymodule]
