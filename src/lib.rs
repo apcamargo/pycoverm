@@ -223,7 +223,7 @@ fn default_return_value(py: Python, n_files: usize) -> (Py<PyAny>, Py<PyAny>) {
 fn index_map(headers: &[String], names: &HashSet<&str>) -> Vec<u32> {
     // Make sure there are no names in names which are not in headers.
     let mut n_seen: usize = 0;
-    let mut result = vec![u32::MAX; names.len()];
+    let mut result = vec![u32::MAX; headers.len()];
     let mut new_index: u32 = 0;
     for (i, header) in headers.iter().enumerate() {
         if names.contains(&header.as_str()) {
@@ -233,7 +233,7 @@ fn index_map(headers: &[String], names: &HashSet<&str>) -> Vec<u32> {
         }
     }
     if n_seen != names.len() {
-        panic!("Some names in `names` were not found in headers")
+        panic!("Some names in `contig_set` were not found in BAM headers")
     }
     result
 }
