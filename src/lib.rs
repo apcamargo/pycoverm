@@ -199,19 +199,19 @@ fn get_coverages_from_bam(
         _ => unreachable!(),
     }
     (
+        headers.into_py(py),
         matrix
             .to_pyarray(Python::acquire_gil().python())
             .into_py(py),
-        headers.into_py(py),
     )
 }
 
 fn default_return_value(py: Python, n_files: usize) -> (Py<PyAny>, Py<PyAny>) {
     (
+        Vec::<String>::new().into_py(py),
         Array::from_elem((0, n_files), 0f32)
             .to_pyarray(Python::acquire_gil().python())
             .into_py(py),
-        Vec::<String>::new().into_py(py),
     )
 }
 
