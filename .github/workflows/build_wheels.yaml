@@ -7,6 +7,41 @@ on:
 
 jobs:
   macos:
+    name: Build Windows
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        python-version: [ '3.8', '3.9', '3.10', '3.11', '3.12' ]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: rust-toolchain
+      uses: actions-rs/toolchain@v1.0.6
+      with:
+        profile: minimal
+        toolchain: stable
+        default: true
+    - name: Setup Python ${{ matrix.python-version }} environment
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Build wheels (x86_64)
+      uses: messense/maturin-action@v1
+      with:
+        target: x86_64
+        maturin-version: v0.10.6
+        args: --interpreter python${{ matrix.python-version }} --release --out dist
+    - name: Install built wheel (x86_64)
+      run: |
+        pip install pycoverm --no-index --find-links dist --force-reinstall --no-dependencies
+        python -c "import pycoverm"
+    - name: Upload wheels
+      uses: actions/upload-artifact@v2
+      with:
+        name: wheels
+        path: dist
+
+  macos:
     name: Build macOS
     runs-on: macos-latest
     strategy:
