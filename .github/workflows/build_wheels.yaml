@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  macos:
+  windows:
     name: Build Windows
     runs-on: windows-latest
     strategy:
