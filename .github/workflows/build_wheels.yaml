@@ -29,7 +29,7 @@ jobs:
     - name: Build wheels
       uses: PyO3/maturin-action@v1
       with:
-        args: --release --out dist
+        args: -i python --release --out dist
     - name: Install built wheel (x86_64)
       run: |
         pip install pycoverm --no-index --find-links dist --force-reinstall --no-dependencies
