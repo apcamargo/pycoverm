@@ -27,10 +27,13 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Build wheels (x86_64)
       uses: messense/maturin-action@v1
+      env:
+        PYO3_PYTHON: python3.11
+        PYO3_PRINT_CONFIG: 1
       with:
         target: x86_64
         maturin-version: v0.10.6
-        args: --interpreter python${{ matrix.python-version }} --release --out dist
+        args: --release --out dist
     - name: Install built wheel (x86_64)
       run: |
         pip install pycoverm --no-index --find-links dist --force-reinstall --no-dependencies
