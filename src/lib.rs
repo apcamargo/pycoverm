@@ -3,7 +3,8 @@ use coverm::{
     FlagFilter,
 };
 use ndarray::Array;
-use numpy::convert::ToPyArray;
+use numpy::pyo3::IntoPy;
+use numpy::ToPyArray;
 use pyo3::{prelude::*, wrap_pyfunction};
 use rust_htslib::{bam, bam::Read};
 use std::collections::HashSet;
@@ -83,14 +84,16 @@ fn is_bam_sorted(bam_file: &str) -> PyResult<bool> {
 /// tuple
 ///     A tuple whose fist element is a list of the contig names and the second
 ///     one is a numpy matrix of contig coverages in the input BAM files.
-#[pyfunction(
-    contig_end_exclusion = "75",
-    min_identity = "0.97",
-    trim_lower = "0.",
-    trim_upper = "0.",
-    contig_set = "None",
-    threads = "1"
-)]
+#[pyfunction]
+#[pyo3(signature = (
+    bam_list,
+    contig_end_exclusion = 75,
+    min_identity = 0.97,
+    trim_lower = 0.,
+    trim_upper = 0.,
+    contig_set = None,
+    threads = 1
+))]
 fn get_coverages_from_bam(
     py: Python,
     bam_list: Vec<&str>,
@@ -99,7 +102,7 @@ fn get_coverages_from_bam(
     trim_lower: f32,
     trim_upper: f32,
     contig_set: Option<HashSet<&str>>,
-    threads: usize,
+    threads: u16,
 ) -> (PyObject, PyObject) {
     let trim_upper = 1. - trim_upper;
     let min_fraction_covered_bases = 0.;
@@ -166,7 +169,7 @@ fn get_coverages_from_bam(
         &mut estimators_and_taker.taker,
         &mut estimators_and_taker.estimators,
         true,
-        filter_params.flag_filters,
+        &filter_params.flag_filters,
         threads,
     );
 
@@ -200,9 +203,7 @@ fn get_coverages_from_bam(
     }
     (
         headers.into_py(py),
-        matrix
-            .to_pyarray(Python::acquire_gil().python())
-            .into_py(py),
+        matrix.to_pyarray(py).into()
     )
 }
 
@@ -210,8 +211,8 @@ fn default_return_value(py: Python, n_files: usize) -> (Py<PyAny>, Py<PyAny>) {
     (
         Vec::<String>::new().into_py(py),
         Array::from_elem((0, n_files), 0f32)
-            .to_pyarray(Python::acquire_gil().python())
-            .into_py(py),
+            .to_pyarray(py)
+            .into(),
     )
 }
 
