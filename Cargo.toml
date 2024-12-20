@@ -1,8 +1,8 @@
 [package]
 name = "pycoverm"
 version = "0.6.0"
-authors = ["Antonio Camargo <antoniop.camargo@gmail.com>"]
 edition = "2021"
+authors = ["Antonio Camargo <antoniop.camargo@gmail.com>"]
 readme = "README.md"
 homepage = "https://github.com/apcamargo/pycoverm"
 keywords = ["bioinformatics"]
@@ -12,8 +12,8 @@ name = "pycoverm"
 crate-type = ["cdylib"]
 
 [dependencies]
+pyo3 = "0.20.3"
 coverm = "0.7.0"
 ndarray = "0.15.6"
 numpy = "0.20.0"
-pyo3 = { version = "0.20", features = ["extension-module"] }
-rust-htslib = "0.45.0"
+rust-htslib = { version = "0.45.0", default-features = false }
