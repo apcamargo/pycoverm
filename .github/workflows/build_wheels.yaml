@@ -1,84 +1,144 @@
 name: build wheels
 
-on: 
+on:
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
-jobs:
-  macos:
-    name: Build macOS
-    runs-on: macos-latest
-    strategy:
-      matrix:
-        python-version: [ '3.8', '3.9', '3.10', '3.11', '3.12' ]
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-    - name: rust-toolchain
-      uses: actions-rs/toolchain@v1.0.6
-      with:
-        profile: minimal
-        toolchain: stable
-        default: true
-    - name: Setup Python ${{ matrix.python-version }} environment
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Build wheels (x86_64)
-      uses: messense/maturin-action@v1
-      with:
-        target: x86_64
-        maturin-version: v0.10.6
-        args: --interpreter python${{ matrix.python-version }} --release --out dist
-    - name: Install built wheel (x86_64)
-      run: |
-        pip install pycoverm --no-index --find-links dist --force-reinstall --no-dependencies
-        python -c "import pycoverm"
-    - name: Upload wheels
-      uses: actions/upload-artifact@v2
-      with:
-        name: wheels
-        path: dist
+permissions:
+  contents: read
 
+jobs:
   linux:
-    name: Build Linux
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.platform.runner }}
     strategy:
       matrix:
-        python-version: [ '3.8', '3.9', '3.10', '3.11', '3.12' ]
+        platform:
+          - runner: ubuntu-latest
+            target: x86_64
+          - runner: ubuntu-latest
+            target: x86
+          - runner: ubuntu-latest
+            target: aarch64
+          - runner: ubuntu-latest
+            target: armv7
+          - runner: ubuntu-latest
+            target: s390x
+          - runner: ubuntu-latest
+            target: ppc64le
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-        architecture: x64
-    - name: Build Wheels
-      uses: messense/maturin-action@v1
-      with:
-        target: x86_64
-        maturin-version: v0.10.6
-        manylinux: auto
-        args: --interpreter python${{ matrix.python-version }} --release --out dist
-        before-script-linux: |
-          # If we're running on rhel centos, install needed packages.
-          if command -v yum &> /dev/null; then
-              yum update -y && yum install -y perl-core openssl openssl-devel pkgconfig libatomic
-              # If we're running on i686 we need to symlink libatomic
-              # in order to build openssl with -latomic flag.
-              if [[ ! -d "/usr/lib64" ]]; then
-                  ln -s /usr/lib/libatomic.so.1 /usr/lib/libatomic.so
-              fi
-          else
-              # If we're running on debian-based system.
-              apt update -y && apt-get install -y libssl-dev openssl pkg-config
-          fi
-    - name: Install built wheel
-      run: |
-        pip install pycoverm --no-index --find-links dist --force-reinstall --no-dependencies
-        python -c "import pycoverm"
-    - name: Upload wheels
-      uses: actions/upload-artifact@v2
-      with:
-        name: wheels
-        path: dist
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.platform.target }}
+          args: --release --out dist --find-interpreter
+          sccache: "true"
+          manylinux: auto
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-linux-${{ matrix.platform.target }}
+          path: dist
+
+  musllinux:
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      matrix:
+        platform:
+          - runner: ubuntu-latest
+            target: x86_64
+          - runner: ubuntu-latest
+            target: x86
+          - runner: ubuntu-latest
+            target: aarch64
+          - runner: ubuntu-latest
+            target: armv7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.platform.target }}
+          args: --release --out dist --find-interpreter
+          sccache: "true"
+          manylinux: musllinux_1_2
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-musllinux-${{ matrix.platform.target }}
+          path: dist
+
+  windows:
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      matrix:
+        platform:
+          - runner: windows-latest
+            target: x64
+          - runner: windows-latest
+            target: x86
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+          architecture: ${{ matrix.platform.target }}
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.platform.target }}
+          args: --release --out dist --find-interpreter
+          sccache: "true"
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-windows-${{ matrix.platform.target }}
+          path: dist
+
+  macos:
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      matrix:
+        platform:
+          - runner: macos-12
+            target: x86_64
+          - runner: macos-14
+            target: aarch64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.platform.target }}
+          args: --release --out dist --find-interpreter
+          sccache: "true"
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-macos-${{ matrix.platform.target }}
+          path: dist
+
+  sdist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build sdist
+        uses: PyO3/maturin-action@v1
+        with:
+          command: sdist
+          args: --out dist
+      - name: Upload sdist
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-sdist
+          path: dist
