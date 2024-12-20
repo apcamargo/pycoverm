@@ -25,7 +25,6 @@ pixi add pycoverm
 
 # Mamba (just replace 'mamba' with 'conda' if you have Conda installed)
 mamba create -n pycoverm_env -c conda-forge -c bioconda pycoverm
-# Activate the geNomad environment
 mamba activate pycoverm_env
 ```
 
