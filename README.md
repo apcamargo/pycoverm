@@ -1,10 +1,10 @@
 <h1 align="center">pyCoverM</h1>
 
-pyCoverM is a Python library that provides a simple interface to [CoverM](https://github.com/wwood/CoverM) for fast coverage estimation.
+pyCoverM is a Python library that provides bindings to [CoverM](https://github.com/wwood/CoverM), enabling fast coverage estimation.
 
 ## Installation
 
-pyCoverM is available through PyPI or Conda.
+pyCoverM is available via PyPI or Conda.
 
 ### PyPI installation
 
@@ -28,12 +28,13 @@ mamba create -n pycoverm_env -c conda-forge -c bioconda pycoverm
 mamba activate pycoverm_env
 ```
 
-### Quick start
+## Quick start
 
 pyCoverM provides two functions:
-1. `is_bam_sorted` - Verifies if a BAM file is sorted by coordinate.
-2. `get_coverages_from_bam` - Computes average contig coverages from sorted BAM files.
+1. `is_bam_sorted`: Checks if a BAM file is sorted by coordinate and returns `True` if sorted, or `False` otherwise.
+2. `get_coverages_from_bam`: Computes the average contig coverage from sorted BAM files. It returns a tuple where the first element is a list of contig names, and the second is a NumPy array of coverage values.
 
+### Example usage
 
 ```py
 >>> import pycoverm
