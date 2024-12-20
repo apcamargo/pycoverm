@@ -19,17 +19,15 @@ jobs:
         platform:
           - runner: ubuntu-latest
             target: x86_64
-          - runner: ubuntu-latest
-            target: aarch64
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: 3.x
       - name: Install dependencies
-        uses: awalsh128/cache-apt-pkgs-action@latest
-        with:
-          packages: libssl-dev openssl pkg-config
+        run: |
+          sudo apt-get update
+          sudo apt-get install libssl-dev openssl pkg-config
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
@@ -39,7 +37,7 @@ jobs:
           manylinux: auto
       - name: Install wheel
         run: |
-          pip install pycoverm --no-index --find-links dist --force-reinstall --no-dependencies
+          pip install pycoverm --ignore-requires-python --no-index --find-links dist --force-reinstall --no-dependencies
           python -c "import pycoverm"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
@@ -54,17 +52,15 @@ jobs:
         platform:
           - runner: ubuntu-latest
             target: x86_64
-          - runner: ubuntu-latest
-            target: aarch64
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: 3.x
       - name: Install dependencies
-        uses: awalsh128/cache-apt-pkgs-action@latest
-        with:
-          packages: libssl-dev openssl pkg-config
+        run: |
+          sudo apt-get update
+          sudo apt-get install libssl-dev openssl pkg-config
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
@@ -74,7 +70,7 @@ jobs:
           manylinux: musllinux_1_2
       - name: Install wheel
         run: |
-          pip install pycoverm --no-index --find-links dist --force-reinstall --no-dependencies
+          pip install pycoverm --ignore-requires-python --no-index --find-links dist --force-reinstall --no-dependencies
           python -c "import pycoverm"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
@@ -104,7 +100,7 @@ jobs:
           sccache: "true"
       - name: Install wheel
         run: |
-          pip install pycoverm --no-index --find-links dist --force-reinstall --no-dependencies
+          pip install pycoverm --ignore-requires-python --no-index --find-links dist --force-reinstall --no-dependencies
           python -c "import pycoverm"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
