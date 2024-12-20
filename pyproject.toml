@@ -5,7 +5,7 @@ build-backend = "maturin"
 [project]
 name = "pycoverm"
 requires-python = ">=3.8"
-dependencies = ["numpy>=1.20,<3"]
+dependencies = ["numpy>=1.16,<3"]
 classifiers = [
     "Intended Audience :: Science/Research",
     "Programming Language :: Rust",
