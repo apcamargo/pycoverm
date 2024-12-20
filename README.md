@@ -1,16 +1,73 @@
-# pyCoverM
+<h1 align="center">pyCoverM</h1>
 
-This package is still in experimental stages and aims to be a simple Python interface to [CoverM](https://github.com/wwood/CoverM)'s fast coverage estimation functions. Currently, pyCoverM provides two functions: `is_bam_sorted`, which checks whether a BAM file is sorted by coordinate, and `get_coverages_from_bam`, that computes average contig coverages from sorted BAM files.
+pyCoverM is a Python library that provides a simple interface to [CoverM](https://github.com/wwood/CoverM) for fast coverage estimation.
 
 ## Installation
 
-```
+pyCoverM is available through PyPI or Conda.
+
+### PyPI installation
+
+```sh
 pip install pycoverm
 ```
 
-## Usage
+### Conda installation
 
-```rust
+The Conda package can be installed though [Pixi](https://pixi.sh/latest/) or [Mamba](https://mamba.readthedocs.io/en/latest/)/[Conda](https://docs.conda.io/projects/conda/en/latest/user-guide/getting-started.html).
+
+```sh
+# Pixi
+pixi init pycoverm_project
+cd pycoverm_project
+pixi project channel add bioconda
+pixi add pycoverm
+
+# Mamba (just replace 'mamba' with 'conda' if you have Conda installed)
+mamba create -n pycoverm_env -c conda-forge -c bioconda pycoverm
+# Activate the geNomad environment
+mamba activate pycoverm_env
+```
+
+### Quick start
+
+pyCoverM provides two functions:
+1. `is_bam_sorted` - Verifies if a BAM file is sorted by coordinate.
+2. `get_coverages_from_bam` - Computes average contig coverages from sorted BAM files.
+
+
+```py
+>>> import pycoverm
+>>> TEST_BAM = "tests/test_data.bam"
+>>> pycoverm.is_bam_sorted(TEST_BAM)
+```
+
+    True
+
+```py
+>>> coverages = pycoverm.get_coverages_from_bam([TEST_BAM])
+>>> coverages[0]
+```
+
+    ['contig_7847997', 'contig_11746202', 'contig_9129108', …, 'contig_2917594']
+
+```py
+>>> coverages[1]
+```
+
+    array([[0.        ],
+           [0.526652  ],
+           [0.08541025],
+           …           ,
+           [0.00907206]], dtype=float32)
+
+
+> [!NOTE]
+> If multiple BAM files are provided, the resulting NumPy array will contain one column for each BAM file, with each column corresponding to the coverage values from a specific BAM file.
+
+## API
+
+```rs
 /// is_bam_sorted(bam_file)
 /// --
 ///
@@ -28,7 +85,7 @@ pip install pycoverm
 ///     otherwise.
 ```
 
-```rust
+```rs
 /// get_coverages_from_bam(bam_list, contig_end_exclusion=75, min_identity=0.97,
 /// trim_lower=0.0, trim_upper=0.0, contig_list=None, threads=1)
 /// --
@@ -41,7 +98,7 @@ pip install pycoverm
 /// Parameters
 /// ----------
 /// bam_list : list
-///     Paths to input BAM files.
+///     A list of paths to input BAM files.
 /// contig_end_exclusion : int, optional
 ///     Exclude bases at the ends of reference sequences from calculation.
 ///     Default is 75.

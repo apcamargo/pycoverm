@@ -59,7 +59,7 @@ fn is_bam_sorted(bam_file: &str) -> PyResult<bool> {
 /// Parameters
 /// ----------
 /// bam_list : list
-///     Paths to input BAM files.
+///     A list of paths to input BAM files.
 /// contig_end_exclusion : int, optional
 ///     Exclude bases at the ends of reference sequences from calculation.
 ///     Default is 75.
