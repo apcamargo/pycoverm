@@ -1,6 +1,6 @@
 [package]
 name = "pycoverm"
-version = "0.6.0"
+version = "0.6.1"
 edition = "2021"
 authors = ["Antonio Camargo <antoniop.camargo@gmail.com>"]
 readme = "README.md"
