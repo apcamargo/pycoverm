@@ -35,10 +35,6 @@ jobs:
           args: --release --out dist --find-interpreter
           sccache: "true"
           manylinux: auto
-      - name: Install wheel
-        run: |
-          pip install pycoverm --ignore-requires-python --no-index --find-links dist --force-reinstall --no-dependencies
-          python -c "import pycoverm"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
@@ -68,10 +64,6 @@ jobs:
           args: --release --out dist --find-interpreter
           sccache: "true"
           manylinux: musllinux_1_2
-      - name: Install wheel
-        run: |
-          pip install pycoverm --ignore-requires-python --no-index --find-links dist --force-reinstall --no-dependencies
-          python -c "import pycoverm"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
@@ -98,10 +90,6 @@ jobs:
           target: ${{ matrix.platform.target }}
           args: --release --out dist --find-interpreter
           sccache: "true"
-      - name: Install wheel
-        run: |
-          pip install pycoverm --ignore-requires-python --no-index --find-links dist --force-reinstall --no-dependencies
-          python -c "import pycoverm"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
